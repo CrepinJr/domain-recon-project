@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Outil de Reconnaissance de Domaine</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>Reconnaissance de Domaine</h1>
+    <div class="search-container">
+        <input type="text" id="domain" name="domain" placeholder="Ex: google.com">
+        <button id="scan-button">Lancer l'analyse</button>
+    </div>
+    <div class="export-buttons" style="margin-top: 10px; display: none;">
+        <button id="export-full-btn">Exporter Rapport Complet</button>
+        <button id="export-summary-btn">Exporter Rapport Résumé</button>
+    </div>
+    <hr>
+    <h3>Résultats :</h3>
+    <pre id="results"></pre>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const scanButton = document.getElementById('scan-button');
+            const domainInput = document.getElementById('domain');
+            const resultsPre = document.getElementById('results');
+            const exportButtons = document.querySelector('.export-buttons');
+            const exportFullBtn = document.getElementById('export-full-btn');
+            const exportSummaryBtn = document.getElementById('export-summary-btn');
+
+            let lastScanData = {}; // Variable pour stocker les résultats de la dernière analyse
+
+            scanButton.addEventListener('click', () => {
+                const domain = domainInput.value.trim();
+                if (!domain) {
+                    resultsPre.textContent = 'Veuillez entrer un nom de domaine.';
+                    return;
+                }
+
+                resultsPre.textContent = 'Analyse en cours...';
+                exportButtons.style.display = 'none';
+
+                fetch('/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ domain })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    resultsPre.textContent = data.full_results;
+                    lastScanData = data;
+                    exportButtons.style.display = 'block';
+                })
+                .catch(error => {
+                    resultsPre.textContent = `Erreur: ${error.message}`;
+                });
+            });
+
+            exportFullBtn.addEventListener('click', () => {
+                const domain = domainInput.value.trim();
+                if (!domain || !lastScanData.full_results) return;
+
+                const data = {
+                    type: 'full',
+                    domain: domain,
+                    full_results: lastScanData.full_results
+                };
+                
+                downloadPDF(data);
+            });
+
+            exportSummaryBtn.addEventListener('click', () => {
+                const domain = domainInput.value.trim();
+                if (!domain || !lastScanData.whois_summary) return;
+
+                const data = {
+                    type: 'summary',
+                    domain: domain,
+                    whois_summary: lastScanData.whois_summary,
+                    dns_summary: lastScanData.dns_summary
+                };
+                
+                downloadPDF(data);
+            });
+
+            function downloadPDF(data) {
+                fetch('/generate_pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `${data.domain}_${data.type}_report.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(error => console.error('Erreur lors de la génération du PDF:', error));
+            }
+        });
+    </script>
+</body>
+</html>
