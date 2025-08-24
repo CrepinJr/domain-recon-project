@@ -1,0 +1,60 @@
+body {
+    background-color: #2c2f33;
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1 {
+    color: #7289da;
+    border-bottom: 2px solid #7289da;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+input[type="text"] {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #4f545c;
+    background-color: #40444b;
+    color: #ffffff;
+    width: 300px;
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    background-color: #7289da;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #677bc4;
+}
+
+pre {
+    background-color: #23272a;
+    border: 1px solid #4f545c;
+    border-radius: 5px;
+    padding: 20px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    width: 80%;
+    max-width: 900px;
+    /* --- Lignes ajoutées pour le défilement --- */
+    max-height: 50vh; /* Hauteur maximale du bloc, 50% de la hauteur de la vue (viewport) */
+    overflow-y: auto; /* Active le défilement vertical si le contenu dépasse la hauteur maximale */
+}

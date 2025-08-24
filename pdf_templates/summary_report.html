@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="summary-section">
+        <h2 class="section-title">Résumé WHOIS</h2>
+        <pre>{{ whois_summary }}</pre>
+    </div>
+    <div class="summary-section">
+        <h2 class="section-title">Résumé DNS</h2>
+        <pre>{{ dns_summary }}</pre>
+    </div>
+{% endblock %}
