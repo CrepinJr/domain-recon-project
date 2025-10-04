@@ -1,9 +1,11 @@
 # Étape 1 : Builder (contient les outils de construction)
-FROM python:3.11-slim-bookworm AS builder
+FROM python:3.13-slim-bookworm AS builder
 
-# Installe les dépendances système de WeasyPrint.
-# Ces paquets ne changent que très rarement.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Correction de sécurité 1 : Mise à jour complète du système d'exploitation (OS)
+# Corrige les failles dans libc6, libexpat1, etc.
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y && \
+    apt-get install -y --no-install-recommends \
     build-essential \
     pkg-config \
     libgirepository-1.0-1 \
@@ -22,23 +24,29 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Copie requirements.txt avant le reste du code.
-# L'installation des dépendances Python est mise en cache tant que requirements.txt ne change pas.
 COPY requirements.txt .
+
+# Correction de sécurité 2 : Mise à jour des outils Python
+# Corrige la faille HIGH dans setuptools (CVE-2025-47273)
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Installation des dépendances de l'application
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copie le reste du code de l'application.
-# Cette étape est exécutée seulement si le contenu de ces dossiers change.
 COPY app.py .
 COPY templates/ templates/
 COPY static/ static/
 COPY pdf_templates/ pdf_templates/
 
 # Étape 2 : Image finale (plus petite pour la production)
-FROM python:3.11-slim-bookworm
+FROM python:3.13-slim-bookworm
 
 # Installe les dépendances système nécessaires à l'exécution de l'application.
-# On n'a plus besoin des outils de "build" comme build-essential.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && \
+    # Correction de sécurité 1 (bis) : Mise à jour du système d'exploitation pour l'image finale
+    apt-get dist-upgrade -y && \
+    apt-get install -y --no-install-recommends \
     libgirepository-1.0-1 \
     libpango-1.0-0 \
     libharfbuzz0b \
